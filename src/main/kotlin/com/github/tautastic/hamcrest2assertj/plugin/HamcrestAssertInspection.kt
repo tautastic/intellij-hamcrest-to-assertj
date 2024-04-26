@@ -35,6 +35,8 @@ class HamcrestAssertInspection : AbstractBaseJavaLocalInspectionTool() {
                 // Get the method expression
                 val methodExpression = expression.methodExpression
 
+                methodExpression.qualifiedName
+
                 // Check if the method expression is for assertThat method from Hamcrest MatcherAssert class
                 if ("assertThat" == methodExpression.referenceName
                     && methodExpression.qualifier != null && methodExpression.qualifier!!.text == "MatcherAssert"

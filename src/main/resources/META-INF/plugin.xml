@@ -34,6 +34,7 @@
             - implementationClass= the fully-qualified name of the inspection implementation class
         -->
         <localInspection language="JAVA"
+                         shortName="Hamcrest2AssertJ"
                          bundle="messages.InspectionBundle"
                          key="inspection.hamcrest.assert.display.name"
                          groupPath="Java"

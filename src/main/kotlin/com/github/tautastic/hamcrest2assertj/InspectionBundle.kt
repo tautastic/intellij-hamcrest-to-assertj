@@ -1,4 +1,4 @@
-package com.github.tautastic.hamj.plugin
+package com.github.tautastic.hamcrest2assertj
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.NonNls

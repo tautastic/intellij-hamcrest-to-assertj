@@ -1,5 +1,6 @@
-package com.github.tautastic.hamj.plugin
+package com.github.tautastic.hamcrest2assertj.plugin
 
+import com.github.tautastic.hamcrest2assertj.InspectionBundle
 import com.intellij.codeInspection.AbstractBaseJavaLocalInspectionTool
 import com.intellij.codeInspection.InspectionsBundle
 import com.intellij.codeInspection.ProblemsHolder

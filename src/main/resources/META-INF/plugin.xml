@@ -1,6 +1,6 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <id>com.github.tautastic.hamj.plugin</id>
+    <id>com.github.tautastic.hamcrest2assertj</id>
     <name>Hamcrest to AssertJ</name>
     <vendor>tautastic</vendor>
 
@@ -41,6 +41,6 @@
                          groupKey="group.names.potentially.confusing.code.constructs"
                          enabledByDefault="true"
                          level="WARNING"
-                         implementationClass="com.github.tautastic.hamj.plugin.HamcrestAssertInspection"/>
+                         implementationClass="com.github.tautastic.hamcrest2assertj.plugin.HamcrestAssertInspection"/>
     </extensions>
 </idea-plugin>

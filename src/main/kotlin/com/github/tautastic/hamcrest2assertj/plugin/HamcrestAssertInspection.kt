@@ -10,6 +10,10 @@ import com.intellij.psi.PsiMethodCallExpression
 import org.jetbrains.annotations.Nls
 import org.jetbrains.annotations.NotNull
 
+private const val HAMCREST_QUALIFIED_ASSERT_THAT = "MatcherAssert.assertThat"
+private const val HAMCREST_UNQUALIFIED_ASSERT_THAT = "assertThat"
+private const val HAMCREST_ASSERT_THAT_CLASS = "PsiClass:MatcherAssert"
+
 class HamcrestAssertInspection : AbstractBaseJavaLocalInspectionTool() {
 
     @Nls
@@ -32,7 +36,13 @@ class HamcrestAssertInspection : AbstractBaseJavaLocalInspectionTool() {
         return object : JavaElementVisitor() {
             override fun visitMethodCallExpression(expression: PsiMethodCallExpression) {
                 super.visitMethodCallExpression(expression)
-                if (expression.methodExpression.qualifiedName == "MatcherAssert.assertThat") {
+                val qualifiedName = expression.methodExpression.qualifiedName
+                val parentText = expression.resolveMethod()?.parent.toString()
+                val isQualifiedName = qualifiedName == HAMCREST_QUALIFIED_ASSERT_THAT
+                val isUnqualifiedName = qualifiedName == HAMCREST_UNQUALIFIED_ASSERT_THAT
+                        && parentText == HAMCREST_ASSERT_THAT_CLASS
+
+                if (isQualifiedName || isUnqualifiedName) {
                     holder.registerProblem(
                         expression,
                         InspectionBundle.message("inspection.hamcrest.assert.that.problem.descriptor")

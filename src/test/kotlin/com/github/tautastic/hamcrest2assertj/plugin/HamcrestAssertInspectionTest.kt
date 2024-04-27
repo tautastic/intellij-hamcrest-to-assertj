@@ -11,7 +11,8 @@ class HamcrestAssertInspectionTest : LightJavaCodeInsightFixtureTestCase() {
     override fun setUp() {
         super.setUp()
         myFixture.enableInspections(HamcrestAssertInspection())
-        myFixture.addClass("""package org.hamcrest.MatcherAssert; public class MatcherAssert { public static <T> void assertThat(final String reason, final T actual, final T matcher) { }}""")
+        myFixture.addClass("""package mock.hamcrest; public class MatcherAssert { public static <T> void assertThat(final String reason, final T actual, final T matcher) { }}""")
+        myFixture.addClass("""package mock.assertj.core.api; public class Assertions { public static <T> void assertThat(final T actual) { }}""")
     }
 
     fun testAssertThat() {

@@ -1,5 +1,5 @@
-import static org.hamcrest.MatcherAssert.assertThat;
+import static mock.hamcrest.MatcherAssert.assertThat;
 
 public void testIsFalse() {
-    assertThat("wrong result", result, Matchers.is(false));
+    assertThat("wrong result", false, Matchers.is(false));
 }

@@ -1,3 +1,5 @@
+import static mock.assertj.core.api.Assertions.assertThat;
+
 public void testIsFalse() {
-    assertThat(result).isFalse();
+    assertThat(false).isFalse();
 }

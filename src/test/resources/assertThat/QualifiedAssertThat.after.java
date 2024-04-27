@@ -1,3 +1,3 @@
 public void testIsFalse() {
-    assertThat(result).isFalse();
+    Assertions.assertThat(result).isFalse();
 }

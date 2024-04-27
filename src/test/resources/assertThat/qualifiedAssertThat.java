@@ -1,5 +1,8 @@
-import mock.hamcrest.MatcherAssert;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 
-public void testIsFalse() {
-    <caret>MatcherAssert.assertThat("wrong result", false, Matchers.is(false));
+public void testEqualTo() {
+    final int myLuckyNumber = 9;
+
+    <caret>MatcherAssert.assertThat("wrong lucky number", myLuckyNumber, Matchers.equalTo(9));
 }

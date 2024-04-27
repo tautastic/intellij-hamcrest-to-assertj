@@ -11,8 +11,10 @@ class AssertThatInspectionTest : LightJavaCodeInsightFixtureTestCase() {
     override fun setUp() {
         super.setUp()
         myFixture.enableInspections(AssertThatInspection())
-        myFixture.addClass("""package mock.hamcrest; public class MatcherAssert { public static <T> void assertThat(final String reason, final T actual, final T matcher) { }}""")
-        myFixture.addClass("""package mock.assertj.core.api; public class Assertions { public static <T> void assertThat(final T actual) { }}""")
+        myFixture.addClass("""package org.hamcrest; public interface Matcher<T> { boolean matches(Object var1); void describeMismatch(Object var1, Object var2); }""")
+        myFixture.addClass("""package org.hamcrest; public class Matchers { public Matchers() {} public static <T> Matcher<T> equalTo(final T operand) { return IsEqual.equalTo(operand); } }""")
+        myFixture.addClass("""package org.hamcrest; public class MatcherAssert { public static <T> void assertThat(final String reason, final T actual, final Matcher<? super T> matcher) { }}""")
+        myFixture.addClass("""package org.assertj.core.api; public class Assertions { public static <T> void assertThat(final T actual) { }}""")
     }
 
     fun testAssertThat() {
@@ -29,7 +31,7 @@ class AssertThatInspectionTest : LightJavaCodeInsightFixtureTestCase() {
         val intention = intentionAction(toSelect)
         assertNotNull("cannot find quick fix", intention)
         myFixture.launchAction(intention)
-        // myFixture.checkResultByFile(getResultFile())
+        myFixture.checkResultByFile(getResultFile())
     }
 
     private fun intentionAction(toSelect: Int): IntentionAction {

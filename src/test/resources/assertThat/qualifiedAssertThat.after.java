@@ -1,5 +1,7 @@
-import mock.assertj.core.api.Assertions;
+import org.assertj.core.api.Assertions;
 
-public void testIsFalse() {
-    Assertions.assertThat(false).isFalse();
+public void testEqualTo() {
+    final int myLuckyNumber = 9;
+
+    Assertions.assertThat(myLuckyNumber).isEqualTo(9);
 }

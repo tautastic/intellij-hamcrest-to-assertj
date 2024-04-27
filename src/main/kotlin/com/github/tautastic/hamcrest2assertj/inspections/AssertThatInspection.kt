@@ -1,6 +1,7 @@
-package com.github.tautastic.hamcrest2assertj.plugin
+package com.github.tautastic.hamcrest2assertj.inspections
 
 import com.github.tautastic.hamcrest2assertj.InspectionBundle
+import com.github.tautastic.hamcrest2assertj.quickfixes.AssertThatQuickFix
 import com.intellij.codeInspection.AbstractBaseJavaLocalInspectionTool
 import com.intellij.codeInspection.InspectionsBundle
 import com.intellij.codeInspection.ProblemsHolder
@@ -14,7 +15,9 @@ private const val HAMCREST_QUALIFIED_ASSERT_THAT = "MatcherAssert.assertThat"
 private const val HAMCREST_UNQUALIFIED_ASSERT_THAT = "assertThat"
 private const val HAMCREST_ASSERT_THAT_CLASS = "PsiClass:MatcherAssert"
 
-class HamcrestAssertInspection : AbstractBaseJavaLocalInspectionTool() {
+class AssertThatInspection : AbstractBaseJavaLocalInspectionTool() {
+
+    private val myQuickFix = AssertThatQuickFix()
 
     @Nls
     @NotNull
@@ -36,19 +39,23 @@ class HamcrestAssertInspection : AbstractBaseJavaLocalInspectionTool() {
         return object : JavaElementVisitor() {
             override fun visitMethodCallExpression(expression: PsiMethodCallExpression) {
                 super.visitMethodCallExpression(expression)
-                val qualifiedName = expression.methodExpression.qualifiedName
-                val parentText = expression.resolveMethod()?.parent.toString()
-                val isQualifiedName = qualifiedName == HAMCREST_QUALIFIED_ASSERT_THAT
-                val isUnqualifiedName = qualifiedName == HAMCREST_UNQUALIFIED_ASSERT_THAT
-                        && parentText == HAMCREST_ASSERT_THAT_CLASS
 
-                if (isQualifiedName || isUnqualifiedName) {
+                if (isHamcrestAssertThatCall(expression)) {
                     holder.registerProblem(
                         expression,
-                        InspectionBundle.message("inspection.hamcrest.assert.that.problem.descriptor")
+                        InspectionBundle.message("inspection.hamcrest.assert.that.problem.descriptor"),
+                        myQuickFix
                     )
                 }
             }
         }
+    }
+
+    private fun isHamcrestAssertThatCall(expression: PsiMethodCallExpression): Boolean {
+        val qualifiedName = expression.methodExpression.qualifiedName
+        val parentText = expression.resolveMethod()?.parent.toString()
+
+        return qualifiedName == HAMCREST_QUALIFIED_ASSERT_THAT ||
+                (qualifiedName == HAMCREST_UNQUALIFIED_ASSERT_THAT && parentText == HAMCREST_ASSERT_THAT_CLASS)
     }
 }

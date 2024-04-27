@@ -1,16 +1,16 @@
-package com.github.tautastic.hamcrest2assertj.plugin
+package com.github.tautastic.hamcrest2assertj.inspections
 
 import com.github.tautastic.hamcrest2assertj.InspectionBundle
-import com.intellij.codeInsight.daemon.impl.HighlightInfo
+import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.testFramework.TestDataPath
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 
 
 @TestDataPath("\$CONTENT_ROOT/src/test/resources")
-class HamcrestAssertInspectionTest : LightJavaCodeInsightFixtureTestCase() {
+class AssertThatInspectionTest : LightJavaCodeInsightFixtureTestCase() {
     override fun setUp() {
         super.setUp()
-        myFixture.enableInspections(HamcrestAssertInspection())
+        myFixture.enableInspections(AssertThatInspection())
         myFixture.addClass("""package mock.hamcrest; public class MatcherAssert { public static <T> void assertThat(final String reason, final T actual, final T matcher) { }}""")
         myFixture.addClass("""package mock.assertj.core.api; public class Assertions { public static <T> void assertThat(final T actual) { }}""")
     }
@@ -25,17 +25,17 @@ class HamcrestAssertInspectionTest : LightJavaCodeInsightFixtureTestCase() {
 
     private fun doTest(toSelect: Int) {
         myFixture.configureByFile(getBeforeFile())
-        myFixture.enableInspections(HamcrestAssertInspection::class.java)
-        val highlightInfo =
-            myFixture.doHighlighting()
-                .filter(this::filterHighlightInfos)[toSelect]
-        assertNotNull("cannot find highlight", highlightInfo)
+        myFixture.enableInspections(AssertThatInspection::class.java)
+        val intention = intentionAction(toSelect)
+        assertNotNull("cannot find quick fix", intention)
+        myFixture.launchAction(intention)
+        // myFixture.checkResultByFile(getResultFile())
     }
 
-    private fun filterHighlightInfos(it: HighlightInfo?): Boolean {
-        return it?.inspectionToolId == "Hamcrest2AssertJ" && it.description == InspectionBundle.message(
-            "inspection.hamcrest.assert.that.problem.descriptor"
-        )
+    private fun intentionAction(toSelect: Int): IntentionAction {
+        return myFixture.availableIntentions.filter { it: IntentionAction ->
+            it.familyName == InspectionBundle.message("inspection.hamcrest.assert.that.use.quickfix")
+        }[toSelect]
     }
 
     private fun doTest() {

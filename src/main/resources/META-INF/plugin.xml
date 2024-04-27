@@ -42,6 +42,6 @@
                          groupKey="group.names.potentially.confusing.code.constructs"
                          enabledByDefault="true"
                          level="WARNING"
-                         implementationClass="com.github.tautastic.hamcrest2assertj.plugin.HamcrestAssertInspection"/>
+                         implementationClass="com.github.tautastic.hamcrest2assertj.inspections.AssertThatInspection"/>
     </extensions>
 </idea-plugin>

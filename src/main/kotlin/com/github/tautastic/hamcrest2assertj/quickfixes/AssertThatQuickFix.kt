@@ -16,27 +16,14 @@ import com.siyeh.ig.psiutils.ImportUtils
 private const val ASSERTJ_ASSERTIONS_IMPORT = "org.assertj.core.api.Assertions"
 
 class AssertThatQuickFix : LocalQuickFix {
-    /**
-     * @return text to appear in "Apply Fix" popup when multiple Quick Fixes exist (in the results of batch code inspection). For example,
-     * if the name of the quickfix is "Create template &lt;filename&gt", the return value of getFamilyName() should be "Create template".
-     * If the name of the quickfix does not depend on a specific element, simply return [.getName].
-     */
+
     override fun getFamilyName(): String {
         return InspectionBundle.message("inspection.hamcrest.assert.that.use.quickfix")
     }
 
-    /**
-     * Called to apply the fix.
-     *
-     *
-     * Please call [com.intellij.profile.codeInspection.ProjectInspectionProfileManager.fireProfileChanged] if inspection profile is changed as result of fix.
-     *
-     * @param project    [Project]
-     * @param descriptor problem reported by the tool which provided this quick fix action
-     */
     override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
         val methodCallExpression = descriptor.psiElement as PsiMethodCallExpression
-        val argumentWrapper = AssertThatArgumentWrapper(methodCallExpression.argumentList.expressions)
+        val argumentWrapper = AssertThatCallWrapper(methodCallExpression)
 
         val factory = JavaPsiFacade.getInstance(project).elementFactory
         val fixedMethodCall =
@@ -46,7 +33,7 @@ class AssertThatQuickFix : LocalQuickFix {
             ) as PsiMethodCallExpression
 
         replaceActualExpression(fixedMethodCall, argumentWrapper.actualExpression)
-        replaceMatcherExpression(factory, fixedMethodCall, argumentWrapper.matcherExpression as PsiMethodCallExpression)
+        replaceMatcherExpression(factory, fixedMethodCall, argumentWrapper.matcherExpression)
 
         methodCallExpression.children[0].replace(fixedMethodCall.children[0])
         methodCallExpression.children[1].replace(fixedMethodCall.children[1])
@@ -75,27 +62,28 @@ class AssertThatQuickFix : LocalQuickFix {
     private fun replaceMatcherExpression(
         factory: PsiElementFactory,
         fixedMethodCall: PsiMethodCallExpression,
-        matcherMethodCallExpression: PsiMethodCallExpression
+        matcherCall: PsiMethodCallExpression
     ) {
-        when (matcherMethodCallExpression.methodExpression.qualifiedName) {
+        val qualifiedName = matcherCall.methodExpression.qualifiedName
+        when (qualifiedName) {
             "Matchers.equalTo", "equalTo" -> {
                 fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier("isEqualTo"))
-                fixedMethodCall.argumentList.expressions[0].replace(matcherMethodCallExpression.argumentList.expressions[0])
+                fixedMethodCall.argumentList.expressions[0].replace(matcherCall.argumentList.expressions[0])
             }
 
             "Matchers.hasSize", "hasSize" -> {
                 fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier("hasSize"))
-                fixedMethodCall.argumentList.expressions[0].replace(matcherMethodCallExpression.argumentList.expressions[0])
+                fixedMethodCall.argumentList.expressions[0].replace(matcherCall.argumentList.expressions[0])
             }
 
             "Matchers.containsString", "containsString" -> {
                 fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier("contains"))
-                fixedMethodCall.argumentList.expressions[0].replace(matcherMethodCallExpression.argumentList.expressions[0])
+                fixedMethodCall.argumentList.expressions[0].replace(matcherCall.argumentList.expressions[0])
             }
 
             "Matchers.containsStringIgnoringCase", "containsStringIgnoringCase" -> {
                 fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier("containsIgnoringCase"))
-                fixedMethodCall.argumentList.expressions[0].replace(matcherMethodCallExpression.argumentList.expressions[0])
+                fixedMethodCall.argumentList.expressions[0].replace(matcherCall.argumentList.expressions[0])
             }
 
             "Matchers.empty", "empty" -> {

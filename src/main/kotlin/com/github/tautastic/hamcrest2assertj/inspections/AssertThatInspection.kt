@@ -1,6 +1,7 @@
 package com.github.tautastic.hamcrest2assertj.inspections
 
 import com.github.tautastic.hamcrest2assertj.InspectionBundle
+import com.github.tautastic.hamcrest2assertj.quickfixes.AssertThatCallWrapper
 import com.github.tautastic.hamcrest2assertj.quickfixes.AssertThatQuickFix
 import com.intellij.codeInspection.AbstractBaseJavaLocalInspectionTool
 import com.intellij.codeInspection.InspectionsBundle
@@ -9,7 +10,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.psi.JavaElementVisitor
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiMethodCallExpression
-import com.intellij.psi.impl.source.PsiJavaFileImpl
 import org.jetbrains.annotations.Nls
 import org.jetbrains.annotations.NotNull
 
@@ -38,26 +38,14 @@ class AssertThatInspection : AbstractBaseJavaLocalInspectionTool() {
         return object : JavaElementVisitor() {
             override fun visitMethodCallExpression(expression: PsiMethodCallExpression) {
                 super.visitMethodCallExpression(expression)
-                try {
-                    if (isHamcrestAssertThatCall(expression)) {
-                        holder.registerProblem(
-                            expression,
-                            InspectionBundle.message("inspection.hamcrest.assert.that.problem.descriptor"),
-                            myQuickFix
-                        )
-                    }
-                } catch (e: Exception) {
-                    logger.debug(e)
+                if (AssertThatCallWrapper.isHamcrestAssertThatCall(expression)) {
+                    holder.registerProblem(
+                        expression,
+                        InspectionBundle.message("inspection.hamcrest.assert.that.problem.descriptor"),
+                        myQuickFix
+                    )
                 }
             }
         }
-    }
-
-    private fun isHamcrestAssertThatCall(expression: PsiMethodCallExpression): Boolean {
-        val qualifiedName = expression.methodExpression.qualifiedName
-        val packageName = (expression.resolveMethod()?.containingClass?.containingFile as PsiJavaFileImpl).packageName
-
-        return (qualifiedName == "MatcherAssert.assertThat" || qualifiedName == "assertThat")
-                && packageName == "org.hamcrest"
     }
 }

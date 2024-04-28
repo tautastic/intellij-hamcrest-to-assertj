@@ -35,6 +35,18 @@ class AssertThatCallWrapper(expression: PsiMethodCallExpression) {
         }
     }
 
+    private fun isHamcrestAssertThatCall(expression: PsiMethodCallExpression): Boolean {
+        val qualifiedName = expression.methodExpression.qualifiedName
+
+        if (qualifiedName == "MatcherAssert.assertThat" || qualifiedName == "assertThat") {
+            val psiMethod = expression.methodExpression.resolve() as PsiMethod
+            val qualifiedClassName = psiMethod.containingClass?.qualifiedName
+            return qualifiedClassName == "org.hamcrest.MatcherAssert"
+        }
+
+        return false
+    }
+
     private fun extractReasonArgument(exp: PsiExpression?): String {
         if (exp !is PsiLiteralExpression || exp.value !is String) {
             throw IllegalArgumentException("First argument must be a PsiLiteralExpression with a String value")
@@ -58,17 +70,12 @@ class AssertThatCallWrapper(expression: PsiMethodCallExpression) {
 
     companion object {
         @JvmStatic
-        fun isHamcrestAssertThatCall(expression: PsiMethodCallExpression): Boolean {
+        fun canConstruct(expression: PsiMethodCallExpression): Boolean {
             try {
-                val qualifiedName = expression.methodExpression.qualifiedName
+                @Suppress("UNUSED_VARIABLE")
+                val callWrapper = AssertThatCallWrapper(expression)
 
-                if (qualifiedName == "MatcherAssert.assertThat" || qualifiedName == "assertThat") {
-                    val psiMethod = expression.methodExpression.resolve() as PsiMethod
-                    val qualifiedClassName = psiMethod.containingClass?.qualifiedName
-                    return qualifiedClassName == "org.hamcrest.MatcherAssert"
-                }
-
-                return false
+                return true
             } catch (e: Exception) {
                 return false
             }

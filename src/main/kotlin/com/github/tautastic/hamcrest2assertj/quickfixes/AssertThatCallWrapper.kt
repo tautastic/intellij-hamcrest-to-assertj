@@ -6,7 +6,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiMethodCallExpression
 
 class AssertThatCallWrapper(expression: PsiMethodCallExpression) {
-    val reason: PsiExpression?
+    val reason: String?
     val actualExpression: PsiExpression
     val matcherExpression: PsiMethodCallExpression
 
@@ -30,23 +30,30 @@ class AssertThatCallWrapper(expression: PsiMethodCallExpression) {
             }
 
             else -> {
-                throw IllegalArgumentException("Expression is not a Hamcrest assertThat call")
+                throw IllegalArgumentException()
             }
         }
     }
 
-    private fun extractMatcherArgument(arg1: PsiExpression?): PsiMethodCallExpression {
-        if (arg1 !is PsiMethodCallExpression) {
-            throw IllegalArgumentException("Second argument must be a PsiMethodCallExpression")
-        }
-        return arg1
-    }
-
-    private fun extractReasonArgument(arg0: PsiExpression?): PsiExpression {
-        if (arg0 !is PsiLiteralExpression || arg0.value !is String) {
+    private fun extractReasonArgument(exp: PsiExpression?): String {
+        if (exp !is PsiLiteralExpression || exp.value !is String) {
             throw IllegalArgumentException("First argument must be a PsiLiteralExpression with a String value")
         }
-        return arg0
+        return exp.text
+    }
+
+    private fun extractMatcherArgument(exp: PsiExpression?): PsiMethodCallExpression {
+        if (exp !is PsiMethodCallExpression) {
+            throw IllegalArgumentException()
+        }
+
+        val qualifiedClassName = (exp.methodExpression.resolve() as PsiMethod).containingClass?.qualifiedName
+
+        if (qualifiedClassName != "org.hamcrest.Matchers") {
+            throw IllegalArgumentException()
+        }
+
+        return exp
     }
 
     companion object {

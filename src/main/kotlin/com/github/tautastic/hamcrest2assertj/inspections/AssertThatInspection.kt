@@ -13,6 +13,7 @@ import com.intellij.psi.PsiMethodCallExpression
 import org.jetbrains.annotations.Nls
 import org.jetbrains.annotations.NotNull
 
+
 class AssertThatInspection : AbstractBaseJavaLocalInspectionTool() {
     private val logger = Logger.getInstance(AssertThatInspection::class.java)
 
@@ -38,12 +39,16 @@ class AssertThatInspection : AbstractBaseJavaLocalInspectionTool() {
         return object : JavaElementVisitor() {
             override fun visitMethodCallExpression(expression: PsiMethodCallExpression) {
                 super.visitMethodCallExpression(expression)
-                if (AssertThatCallWrapper.isHamcrestAssertThatCall(expression)) {
+                try {
+                    @Suppress("UNUSED_VARIABLE")
+                    val callWrapper = AssertThatCallWrapper(expression)
                     holder.registerProblem(
                         expression,
                         InspectionBundle.message("inspection.hamcrest.assert.that.problem.descriptor"),
                         myQuickFix
                     )
+                } catch (e: Exception) {
+                    logger.debug(e)
                 }
             }
         }

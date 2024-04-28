@@ -22,8 +22,8 @@ class AssertThatQuickFix : LocalQuickFix {
     }
 
     override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
-        val methodCallExpression = descriptor.psiElement as PsiMethodCallExpression
-        val argumentWrapper = AssertThatCallWrapper(methodCallExpression)
+        val callExpression = descriptor.psiElement as PsiMethodCallExpression
+        val callWrapper = AssertThatCallWrapper(callExpression)
 
         val factory = JavaPsiFacade.getInstance(project).elementFactory
         val fixedMethodCall =
@@ -32,13 +32,13 @@ class AssertThatQuickFix : LocalQuickFix {
                 null
             ) as PsiMethodCallExpression
 
-        replaceActualExpression(fixedMethodCall, argumentWrapper.actualExpression)
-        replaceMatcherExpression(factory, fixedMethodCall, argumentWrapper.matcherExpression)
+        replaceActualExpression(fixedMethodCall, callWrapper.actualExpression)
+        replaceMatcherExpression(factory, fixedMethodCall, callWrapper.matcherExpression)
 
-        methodCallExpression.children[0].replace(fixedMethodCall.children[0])
-        methodCallExpression.children[1].replace(fixedMethodCall.children[1])
+        callExpression.children[0].replace(fixedMethodCall.children[0])
+        callExpression.children[1].replace(fixedMethodCall.children[1])
 
-        handleImports(methodCallExpression)
+        handleImports(callExpression)
     }
 
     private fun handleImports(methodCallExpression: PsiMethodCallExpression) {

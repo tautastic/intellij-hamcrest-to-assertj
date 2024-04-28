@@ -6,6 +6,7 @@ import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
+import com.intellij.psi.PsiElementFactory
 import com.intellij.psi.PsiExpression
 import com.intellij.psi.PsiMethodCallExpression
 import com.siyeh.ig.psiutils.ClassUtils
@@ -40,12 +41,12 @@ class AssertThatQuickFix : LocalQuickFix {
         val factory = JavaPsiFacade.getInstance(project).elementFactory
         val fixedMethodCall =
             factory.createExpressionFromText(
-                "Assertions.assertThat(ACTUAL_EXPRESSION).isEqualTo(MATCHER_EXPRESSION)",
+                "Assertions.assertThat(ACTUAL_EXPRESSION).MATCHER_EXPRESSION(MATCHER_EXPRESSION_ARGUMENT)",
                 null
             ) as PsiMethodCallExpression
 
         replaceActualExpression(fixedMethodCall, argumentWrapper.actualExpression)
-        replaceMatcherExpression(fixedMethodCall, argumentWrapper.matcherExpression)
+        replaceMatcherExpression(factory, fixedMethodCall, argumentWrapper.matcherExpression as PsiMethodCallExpression)
 
         methodCallExpression.children[0].replace(fixedMethodCall.children[0])
         methodCallExpression.children[1].replace(fixedMethodCall.children[1])
@@ -71,8 +72,40 @@ class AssertThatQuickFix : LocalQuickFix {
         methodCallExpression.argumentList.expressions[0].replace(actualExpression)
     }
 
-    private fun replaceMatcherExpression(fixedMethodCall: PsiMethodCallExpression, matcherExpression: PsiExpression) {
-        val matcherPsiExpression = (matcherExpression as PsiMethodCallExpression).argumentList.expressions[0]
-        fixedMethodCall.argumentList.expressions[0].replace(matcherPsiExpression)
+    private fun replaceMatcherExpression(
+        factory: PsiElementFactory,
+        fixedMethodCall: PsiMethodCallExpression,
+        matcherMethodCallExpression: PsiMethodCallExpression
+    ) {
+        when (matcherMethodCallExpression.methodExpression.qualifiedName) {
+            "Matchers.equalTo", "equalTo" -> {
+                fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier("isEqualTo"))
+                fixedMethodCall.argumentList.expressions[0].replace(matcherMethodCallExpression.argumentList.expressions[0])
+            }
+
+            "Matchers.hasSize", "hasSize" -> {
+                fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier("hasSize"))
+                fixedMethodCall.argumentList.expressions[0].replace(matcherMethodCallExpression.argumentList.expressions[0])
+            }
+
+            "Matchers.containsString", "containsString" -> {
+                fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier("contains"))
+                fixedMethodCall.argumentList.expressions[0].replace(matcherMethodCallExpression.argumentList.expressions[0])
+            }
+
+            "Matchers.containsStringIgnoringCase", "containsStringIgnoringCase" -> {
+                fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier("containsIgnoringCase"))
+                fixedMethodCall.argumentList.expressions[0].replace(matcherMethodCallExpression.argumentList.expressions[0])
+            }
+
+            "Matchers.empty", "empty" -> {
+                fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier("isEmpty"))
+                fixedMethodCall.argumentList.expressions[0].delete()
+            }
+
+            else -> {
+                throw IllegalStateException()
+            }
+        }
     }
 }

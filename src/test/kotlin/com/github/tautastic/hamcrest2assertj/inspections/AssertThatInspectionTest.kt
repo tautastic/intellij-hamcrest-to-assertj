@@ -11,37 +11,50 @@ class AssertThatInspectionTest : LightJavaCodeInsightFixtureTestCase() {
     override fun setUp() {
         super.setUp()
         myFixture.enableInspections(AssertThatInspection())
-        myFixture.addClass("""package org.hamcrest; public interface Matcher<T> { boolean matches(Object var1); void describeMismatch(Object var1, Object var2); }""")
-        myFixture.addClass("""package org.hamcrest; public class Matchers { public Matchers() {} public static <T> Matcher<T> equalTo(final T operand) { return IsEqual.equalTo(operand); } }""")
-        myFixture.addClass("""package org.hamcrest; public class MatcherAssert { public static <T> void assertThat(final String reason, final T actual, final Matcher<? super T> matcher) { }}""")
+        myFixture.addClass("""package org.hamcrest; public interface Matcher<T> { boolean matches(Object var1); }""")
+        myFixture.addClass("""package org.hamcrest; public class Matchers { public static <T> Matcher<T> equalTo(final T op){} public static <T> Matcher<T> hasSize(final T op) {} public static <T> Matcher<T> empty() {} public static <T> Matcher<T> containsString(final T op) {} public static <T> Matcher<T> containsStringIgnoringCase(final T op) {} }""")
+        myFixture.addClass("""package org.hamcrest; public class MatcherAssert { public static <T> void assertThat(final String reason, final T actual, final Matcher<? super T> matcher) { return null; }}""")
         myFixture.addClass("""package org.assertj.core.api; public class Assertions { public static <T> void assertThat(final T actual) { }}""")
+        myFixture.addClass("""package java.util; public class ArrayList<E> { public ArrayList() {} }""")
     }
 
-    fun testAssertThat() {
+    fun testAssertThatEqualTo() {
         doTest()
     }
 
-    fun testQualifiedAssertThat() {
+    fun testAssertThatHasSize() {
         doTest()
     }
 
-    private fun doTest(toSelect: Int) {
+    fun testAssertThatEmpty() {
+        doTest()
+    }
+
+    fun testAssertThatContainsString() {
+        doTest()
+    }
+
+    fun testAssertThatContainsStringIgnoringCase() {
+        doTest()
+    }
+
+    fun testQualifiedAssertThatEqualTo() {
+        doTest()
+    }
+
+    private fun doTest() {
         myFixture.configureByFile(getBeforeFile())
         myFixture.enableInspections(AssertThatInspection::class.java)
-        val intention = intentionAction(toSelect)
+        val intention = intentionAction()
         assertNotNull("cannot find quick fix", intention)
         myFixture.launchAction(intention)
         myFixture.checkResultByFile(getResultFile())
     }
 
-    private fun intentionAction(toSelect: Int): IntentionAction {
+    private fun intentionAction(): IntentionAction {
         return myFixture.availableIntentions.filter { it: IntentionAction ->
             it.familyName == InspectionBundle.message("inspection.hamcrest.assert.that.use.quickfix")
-        }[toSelect]
-    }
-
-    private fun doTest() {
-        doTest(0)
+        }[0]
     }
 
     private fun getResultFile(): String {

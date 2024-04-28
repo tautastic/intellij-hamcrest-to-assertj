@@ -19,42 +19,56 @@ class AssertThatInspectionTest : LightJavaCodeInsightFixtureTestCase() {
     }
 
     fun testAssertThatEqualTo() {
-        doTest()
+        doIntentionTest()
     }
 
     fun testAssertThatHasSize() {
-        doTest()
+        doIntentionTest()
     }
 
     fun testAssertThatEmpty() {
-        doTest()
+        doIntentionTest()
     }
 
     fun testAssertThatContainsString() {
-        doTest()
+        doIntentionTest()
     }
 
     fun testAssertThatContainsStringIgnoringCase() {
-        doTest()
+        doIntentionTest()
     }
 
     fun testQualifiedAssertThatEqualTo() {
-        doTest()
+        doIntentionTest()
     }
 
-    private fun doTest() {
+    fun testNonHamcrestMatcher() {
+        doNonIntentionTest()
+    }
+
+    fun testNonHamcrestAssertThat() {
+        doNonIntentionTest()
+    }
+
+    private fun doIntentionTest() {
         myFixture.configureByFile(getBeforeFile())
         myFixture.enableInspections(AssertThatInspection::class.java)
-        val intention = intentionAction()
+        val intention = myFixture.availableIntentions.filter { it: IntentionAction ->
+            it.familyName == InspectionBundle.message("inspection.hamcrest.assert.that.use.quickfix")
+        }[0]
         assertNotNull("cannot find quick fix", intention)
         myFixture.launchAction(intention)
         myFixture.checkResultByFile(getResultFile())
     }
 
-    private fun intentionAction(): IntentionAction {
-        return myFixture.availableIntentions.filter { it: IntentionAction ->
+    private fun doNonIntentionTest() {
+        myFixture.configureByFile(getBeforeFile())
+        myFixture.enableInspections(AssertThatInspection::class.java)
+        val intentions = myFixture.availableIntentions.filter { it: IntentionAction ->
             it.familyName == InspectionBundle.message("inspection.hamcrest.assert.that.use.quickfix")
-        }[0]
+        }
+        assertEmpty("there should be no quick fix", intentions)
+        myFixture.checkResultByFile(getResultFile())
     }
 
     private fun getResultFile(): String {

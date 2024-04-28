@@ -7,8 +7,9 @@ import com.intellij.psi.PsiMethodCallExpression
 
 class AssertThatCallWrapper(expression: PsiMethodCallExpression) {
     val reason: String?
-    val actualExpression: PsiExpression
-    val matcherExpression: PsiMethodCallExpression
+    val actualExp: PsiExpression
+    val matcherCallExp: PsiMethodCallExpression
+    val newMatcherIdentifier: String
 
     init {
         if (!isHamcrestAssertThatCall(expression)) {
@@ -19,14 +20,16 @@ class AssertThatCallWrapper(expression: PsiMethodCallExpression) {
         when (argumentList.size) {
             3 -> {
                 this.reason = extractReasonArgument(argumentList[0])
-                this.actualExpression = argumentList[1]
-                this.matcherExpression = extractMatcherArgument(argumentList[2])
+                this.actualExp = argumentList[1]
+                this.matcherCallExp = extractMatcherArgument(argumentList[2])
+                this.newMatcherIdentifier = computeNewMatcherIdentifier()
             }
 
             2 -> {
                 this.reason = null
-                this.actualExpression = argumentList[0]
-                this.matcherExpression = extractMatcherArgument(argumentList[1])
+                this.actualExp = argumentList[0]
+                this.matcherCallExp = extractMatcherArgument(argumentList[1])
+                this.newMatcherIdentifier = computeNewMatcherIdentifier()
             }
 
             else -> {
@@ -68,6 +71,16 @@ class AssertThatCallWrapper(expression: PsiMethodCallExpression) {
         return exp
     }
 
+    private fun computeNewMatcherIdentifier(): String {
+        val exp = this.matcherCallExp.methodExpression
+
+        if (exp.isQualified) {
+            return matcherMap[exp.qualifiedName] ?: throw IllegalStateException()
+        }
+
+        return matcherMap["Matchers.".plus(exp.qualifiedName)] ?: throw IllegalStateException()
+    }
+
     companion object {
         @JvmStatic
         fun canConstruct(expression: PsiMethodCallExpression): Boolean {
@@ -80,5 +93,32 @@ class AssertThatCallWrapper(expression: PsiMethodCallExpression) {
                 return false
             }
         }
+
+        @JvmStatic
+        private val matcherMap = mapOf(
+            "Matchers.equalTo" to "isEqualTo",
+            "Matchers.hasSize" to "hasSize",
+            "Matchers.containsString" to "contains",
+            "Matchers.containsStringIgnoringCase" to "containsIgnoringCase",
+            "Matchers.empty" to "isEmpty",
+            "Matchers.allOf" to "satisfiesAllOf",
+            "Matchers.anyOf" to "satisfiesAnyOf",
+            "Matchers.contains" to "contains",
+            "Matchers.endsWith" to "endsWith",
+            "Matchers.endsWithIgnoringCase" to "endsWithIgnoringCase",
+            "Matchers.equalToIgnoringCase" to "isEqualToIgnoringCase",
+            "Matchers.equalToIgnoringWhiteSpace" to "isEqualToIgnoringWhitespace",
+            "Matchers.hasItem" to "contains",
+            "Matchers.hasItems" to "containsAnyOf",
+            "Matchers.instanceOf" to "isInstanceOf",
+            "Matchers.isEmptyOrNullString" to "isNullOrEmpty",
+            "Matchers.isEmptyString" to "isEmpty",
+            "Matchers.isIn" to "isIn",
+            "Matchers.notNullValue" to "isNotNull",
+            "Matchers.nullValue" to "isNull",
+            "Matchers.startsWith" to "startsWith",
+            "Matchers.startsWithIgnoringCase" to "startsWithIgnoringCase"
+        )
+
     }
 }

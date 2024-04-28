@@ -32,8 +32,8 @@ class AssertThatQuickFix : LocalQuickFix {
                 null
             ) as PsiMethodCallExpression
 
-        replaceActualExpression(fixedMethodCall, callWrapper.actualExpression)
-        replaceMatcherExpression(factory, fixedMethodCall, callWrapper.matcherExpression)
+        replaceActualExpression(fixedMethodCall, callWrapper.actualExp)
+        replaceMatcherExpression(fixedMethodCall, callWrapper, factory)
 
         callExpression.children[0].replace(fixedMethodCall.children[0])
         callExpression.children[1].replace(fixedMethodCall.children[1])
@@ -60,40 +60,17 @@ class AssertThatQuickFix : LocalQuickFix {
     }
 
     private fun replaceMatcherExpression(
-        factory: PsiElementFactory,
         fixedMethodCall: PsiMethodCallExpression,
-        matcherCall: PsiMethodCallExpression
+        callWrapper: AssertThatCallWrapper,
+        factory: PsiElementFactory
     ) {
-        val qualifiedName = matcherCall.methodExpression.qualifiedName
-        when (qualifiedName) {
-            "Matchers.equalTo", "equalTo" -> {
-                fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier("isEqualTo"))
-                fixedMethodCall.argumentList.expressions[0].replace(matcherCall.argumentList.expressions[0])
-            }
 
-            "Matchers.hasSize", "hasSize" -> {
-                fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier("hasSize"))
-                fixedMethodCall.argumentList.expressions[0].replace(matcherCall.argumentList.expressions[0])
-            }
-
-            "Matchers.containsString", "containsString" -> {
-                fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier("contains"))
-                fixedMethodCall.argumentList.expressions[0].replace(matcherCall.argumentList.expressions[0])
-            }
-
-            "Matchers.containsStringIgnoringCase", "containsStringIgnoringCase" -> {
-                fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier("containsIgnoringCase"))
-                fixedMethodCall.argumentList.expressions[0].replace(matcherCall.argumentList.expressions[0])
-            }
-
-            "Matchers.empty", "empty" -> {
-                fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier("isEmpty"))
-                fixedMethodCall.argumentList.expressions[0].delete()
-            }
-
-            else -> {
-                throw IllegalStateException()
-            }
+        fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier(callWrapper.newMatcherIdentifier))
+        val argumentList = callWrapper.matcherCallExp.argumentList
+        if (argumentList.isEmpty) {
+            fixedMethodCall.argumentList.expressions[0].delete()
+        } else {
+            fixedMethodCall.argumentList.replace(argumentList)
         }
     }
 }

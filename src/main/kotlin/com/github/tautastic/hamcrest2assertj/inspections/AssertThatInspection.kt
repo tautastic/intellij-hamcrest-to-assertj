@@ -5,17 +5,16 @@ import com.github.tautastic.hamcrest2assertj.quickfixes.AssertThatQuickFix
 import com.intellij.codeInspection.AbstractBaseJavaLocalInspectionTool
 import com.intellij.codeInspection.InspectionsBundle
 import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.psi.JavaElementVisitor
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiMethodCallExpression
+import com.intellij.psi.impl.source.PsiJavaFileImpl
 import org.jetbrains.annotations.Nls
 import org.jetbrains.annotations.NotNull
 
-private const val HAMCREST_QUALIFIED_ASSERT_THAT = "MatcherAssert.assertThat"
-private const val HAMCREST_UNQUALIFIED_ASSERT_THAT = "assertThat"
-private const val HAMCREST_ASSERT_THAT_CLASS = "PsiClass:MatcherAssert"
-
 class AssertThatInspection : AbstractBaseJavaLocalInspectionTool() {
+    private val logger = Logger.getInstance(AssertThatInspection::class.java)
 
     private val myQuickFix = AssertThatQuickFix()
 
@@ -39,13 +38,16 @@ class AssertThatInspection : AbstractBaseJavaLocalInspectionTool() {
         return object : JavaElementVisitor() {
             override fun visitMethodCallExpression(expression: PsiMethodCallExpression) {
                 super.visitMethodCallExpression(expression)
-
-                if (isHamcrestAssertThatCall(expression)) {
-                    holder.registerProblem(
-                        expression,
-                        InspectionBundle.message("inspection.hamcrest.assert.that.problem.descriptor"),
-                        myQuickFix
-                    )
+                try {
+                    if (isHamcrestAssertThatCall(expression)) {
+                        holder.registerProblem(
+                            expression,
+                            InspectionBundle.message("inspection.hamcrest.assert.that.problem.descriptor"),
+                            myQuickFix
+                        )
+                    }
+                } catch (e: Exception) {
+                    logger.debug(e)
                 }
             }
         }
@@ -53,9 +55,9 @@ class AssertThatInspection : AbstractBaseJavaLocalInspectionTool() {
 
     private fun isHamcrestAssertThatCall(expression: PsiMethodCallExpression): Boolean {
         val qualifiedName = expression.methodExpression.qualifiedName
-        val parentText = expression.resolveMethod()?.parent.toString()
+        val packageName = (expression.resolveMethod()?.containingClass?.containingFile as PsiJavaFileImpl).packageName
 
-        return qualifiedName == HAMCREST_QUALIFIED_ASSERT_THAT ||
-                (qualifiedName == HAMCREST_UNQUALIFIED_ASSERT_THAT && parentText == HAMCREST_ASSERT_THAT_CLASS)
+        return (qualifiedName == "MatcherAssert.assertThat" || qualifiedName == "assertThat")
+                && packageName == "org.hamcrest"
     }
 }

@@ -1,7 +1,6 @@
 package com.github.tautastic.hamcrest2assertj.quickfixes
 
 import com.github.tautastic.hamcrest2assertj.InspectionBundle
-import com.intellij.codeInsight.actions.OptimizeImportsProcessor
 import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.openapi.project.Project
@@ -24,6 +23,7 @@ class AssertThatQuickFix : LocalQuickFix {
     override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
         val callExpression = descriptor.psiElement as PsiMethodCallExpression
         val callWrapper = AssertThatCallWrapper(callExpression)
+        callWrapper.optimizeNewMatcher()
 
         val factory = JavaPsiFacade.getInstance(project).elementFactory
         val fixedMethodCall =
@@ -46,10 +46,6 @@ class AssertThatQuickFix : LocalQuickFix {
             val psiClass = ClassUtils.findClass(ASSERTJ_ASSERTIONS_IMPORT, methodCallExpression)
             if (psiClass != null) {
                 ImportUtils.addImportIfNeeded(psiClass, methodCallExpression)
-                OptimizeImportsProcessor(
-                    methodCallExpression.project,
-                    methodCallExpression.containingFile
-                ).runWithoutProgress()
             }
         }
     }
@@ -66,8 +62,8 @@ class AssertThatQuickFix : LocalQuickFix {
     ) {
 
         fixedMethodCall.firstChild.lastChild.replace(factory.createIdentifier(callWrapper.newMatcherIdentifier))
-        val argumentList = callWrapper.matcherCallExp.argumentList
-        if (argumentList.isEmpty) {
+        val argumentList = callWrapper.matcherCallArgs
+        if (argumentList.isEmpty || callWrapper.ignoreMatcherCallArgsFlag) {
             fixedMethodCall.argumentList.expressions[0].delete()
         } else {
             fixedMethodCall.argumentList.replace(argumentList)

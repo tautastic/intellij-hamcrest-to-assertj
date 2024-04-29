@@ -12,7 +12,7 @@ class AssertThatInspectionTest : LightJavaCodeInsightFixtureTestCase() {
         super.setUp()
         myFixture.enableInspections(AssertThatInspection())
         myFixture.addClass("""package org.hamcrest; public interface Matcher<T> { boolean matches(Object var1); }""")
-        myFixture.addClass("""package org.hamcrest; public class Matchers { public static <T> Matcher<T> equalTo(final T op){} public static <T> Matcher<T> hasSize(final T op) {} public static <T> Matcher<T> empty() {} public static <T> Matcher<T> containsString(final T op) {} public static <T> Matcher<T> containsStringIgnoringCase(final T op) {} }""")
+        myFixture.addClass("""package org.hamcrest; public class Matchers { public static <T> Matcher<T> equalTo(final T op){} public static <T> Matcher<T> hasSize(final T op) {} public static <T> Matcher<T> empty() {} public static <T> Matcher<T> containsString(final T op) {} public static <T> Matcher<T> containsStringIgnoringCase(final T op) {} public static <T> Matcher<T> contains(final T op) {} public static <T> Matcher<T> allOf(final T op) {} public static <T> Matcher<T> anyOf(final T op) {} public static <T> Matcher<T> notNullValue() {} public static <T> Matcher<T> nullValue() {} }""")
         myFixture.addClass("""package org.hamcrest; public class MatcherAssert { public static <T> void assertThat(final String reason, final T actual, final Matcher<? super T> matcher) { return null; }}""")
         myFixture.addClass("""package org.assertj.core.api; public class Assertions { public static <T> void assertThat(final T actual) { }}""")
         myFixture.addClass("""package java.util; public class ArrayList<E> { public ArrayList() {} }""")
@@ -48,6 +48,30 @@ class AssertThatInspectionTest : LightJavaCodeInsightFixtureTestCase() {
 
     fun testNonHamcrestAssertThat() {
         doNonIntentionTest()
+    }
+
+    fun testAssertThatContains() {
+        doIntentionTest()
+    }
+
+    fun testAssertThatNotNull() {
+        doIntentionTest()
+    }
+
+    fun testAssertThatNull() {
+        doIntentionTest()
+    }
+
+    fun testAssertThatEqualToBool() {
+        doIntentionTest()
+    }
+
+    fun testAssertThatEqualToNull() {
+        doIntentionTest()
+    }
+
+    fun testAssertThatHasSizeZero() {
+        doIntentionTest()
     }
 
     private fun doIntentionTest() {

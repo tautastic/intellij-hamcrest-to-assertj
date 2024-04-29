@@ -1,15 +1,13 @@
 package com.github.tautastic.hamcrest2assertj.quickfixes
 
-import com.intellij.psi.PsiExpression
-import com.intellij.psi.PsiLiteralExpression
-import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiMethodCallExpression
+import com.intellij.psi.*
 
 class AssertThatCallWrapper(expression: PsiMethodCallExpression) {
     val reason: String?
     val actualExp: PsiExpression
-    val matcherCallExp: PsiMethodCallExpression
-    val newMatcherIdentifier: String
+    val matcherCallArgs: PsiExpressionList
+    var newMatcherIdentifier: String
+    var ignoreMatcherCallArgsFlag: Boolean = false
 
     init {
         if (!isHamcrestAssertThatCall(expression)) {
@@ -21,19 +19,72 @@ class AssertThatCallWrapper(expression: PsiMethodCallExpression) {
             3 -> {
                 this.reason = extractReasonArgument(argumentList[0])
                 this.actualExp = argumentList[1]
-                this.matcherCallExp = extractMatcherArgument(argumentList[2])
-                this.newMatcherIdentifier = computeNewMatcherIdentifier()
+                this.matcherCallArgs = extractMatcherArguments(argumentList[2])
+                this.newMatcherIdentifier = computeNewMatcherIdentifier(argumentList[2])
             }
 
             2 -> {
                 this.reason = null
                 this.actualExp = argumentList[0]
-                this.matcherCallExp = extractMatcherArgument(argumentList[1])
-                this.newMatcherIdentifier = computeNewMatcherIdentifier()
+                this.matcherCallArgs = extractMatcherArguments(argumentList[1])
+                this.newMatcherIdentifier = computeNewMatcherIdentifier(argumentList[1])
             }
 
             else -> {
                 throw IllegalArgumentException()
+            }
+        }
+    }
+
+    fun optimizeNewMatcher() {
+        val args = this.matcherCallArgs.expressions
+        if (args.size == 1) {
+            val arg0 = args[0]
+            when (newMatcherIdentifier) {
+                "isEqualTo" -> {
+                    when (arg0) {
+                        is PsiLiteralExpression -> {
+                            val value = arg0.value
+                            if (value is Boolean) {
+                                if (value == true) {
+                                    this.newMatcherIdentifier = "isTrue"
+                                } else {
+                                    this.newMatcherIdentifier = "isFalse"
+                                }
+                                this.ignoreMatcherCallArgsFlag = true
+                            }
+                            if (value == null) {
+                                this.newMatcherIdentifier = "isNull"
+                                this.ignoreMatcherCallArgsFlag = true
+                            }
+                        }
+
+                        is PsiReferenceExpression -> {
+                            val psiMember = arg0.resolve() as? PsiMember
+                            val qualifiedMemberName = psiMember?.containingClass?.qualifiedName
+
+                            if (qualifiedMemberName == "java.lang.Boolean") {
+                                val qualifiedName = arg0.qualifiedName
+                                if (qualifiedName == "Boolean.TRUE" || qualifiedName == "TRUE") {
+                                    this.newMatcherIdentifier = "isTrue"
+                                    this.ignoreMatcherCallArgsFlag = true
+                                }
+                                if (qualifiedName == "Boolean.FALSE" || qualifiedName == "FALSE") {
+                                    this.newMatcherIdentifier = "isFalse"
+                                    this.ignoreMatcherCallArgsFlag = true
+                                }
+                            }
+                        }
+                    }
+                }
+
+                "hasSize" -> {
+                    val value = (arg0 as? PsiLiteralExpression)?.value as? Int
+                    if (value == 0) {
+                        this.newMatcherIdentifier = "isEmpty"
+                        this.ignoreMatcherCallArgsFlag = true
+                    }
+                }
             }
         }
     }
@@ -57,28 +108,33 @@ class AssertThatCallWrapper(expression: PsiMethodCallExpression) {
         return exp.text
     }
 
-    private fun extractMatcherArgument(exp: PsiExpression?): PsiMethodCallExpression {
+    private fun extractMatcherArguments(exp: PsiExpression?): PsiExpressionList {
         if (exp !is PsiMethodCallExpression) {
             throw IllegalArgumentException()
         }
 
         val qualifiedClassName = (exp.methodExpression.resolve() as PsiMethod).containingClass?.qualifiedName
 
-        if (qualifiedClassName != "org.hamcrest.Matchers") {
+        if (qualifiedClassName?.contains("org.hamcrest") == false) {
             throw IllegalArgumentException()
         }
 
-        return exp
+        return exp.argumentList
     }
 
-    private fun computeNewMatcherIdentifier(): String {
-        val exp = this.matcherCallExp.methodExpression
-
-        if (exp.isQualified) {
-            return matcherMap[exp.qualifiedName] ?: throw IllegalStateException()
+    private fun computeNewMatcherIdentifier(exp: PsiExpression?): String {
+        if (exp == null || exp !is PsiMethodCallExpression) {
+            throw IllegalArgumentException()
         }
 
-        return matcherMap["Matchers.".plus(exp.qualifiedName)] ?: throw IllegalStateException()
+        val callExp = exp.methodExpression
+
+        if (callExp.isQualified) {
+            val unqualifiedName = callExp.qualifiedName.split(".").last()
+            return matcherMap[unqualifiedName] ?: throw IllegalStateException()
+        }
+
+        return matcherMap[callExp.qualifiedName] ?: throw IllegalStateException()
     }
 
     companion object {
@@ -96,28 +152,15 @@ class AssertThatCallWrapper(expression: PsiMethodCallExpression) {
 
         @JvmStatic
         private val matcherMap = mapOf(
-            "Matchers.equalTo" to "isEqualTo",
-            "Matchers.hasSize" to "hasSize",
-            "Matchers.containsString" to "contains",
-            "Matchers.containsStringIgnoringCase" to "containsIgnoringCase",
-            "Matchers.empty" to "isEmpty",
-            "Matchers.allOf" to "satisfiesAllOf",
-            "Matchers.anyOf" to "satisfiesAnyOf",
-            "Matchers.contains" to "contains",
-            "Matchers.endsWith" to "endsWith",
-            "Matchers.endsWithIgnoringCase" to "endsWithIgnoringCase",
-            "Matchers.equalToIgnoringCase" to "isEqualToIgnoringCase",
-            "Matchers.equalToIgnoringWhiteSpace" to "isEqualToIgnoringWhitespace",
-            "Matchers.hasItem" to "contains",
-            "Matchers.hasItems" to "containsAnyOf",
-            "Matchers.instanceOf" to "isInstanceOf",
-            "Matchers.isEmptyOrNullString" to "isNullOrEmpty",
-            "Matchers.isEmptyString" to "isEmpty",
-            "Matchers.isIn" to "isIn",
-            "Matchers.notNullValue" to "isNotNull",
-            "Matchers.nullValue" to "isNull",
-            "Matchers.startsWith" to "startsWith",
-            "Matchers.startsWithIgnoringCase" to "startsWithIgnoringCase"
+            "equalTo" to "isEqualTo",
+            "is" to "isEqualTo",
+            "hasSize" to "hasSize",
+            "containsString" to "contains",
+            "containsStringIgnoringCase" to "containsIgnoringCase",
+            "empty" to "isEmpty",
+            "contains" to "contains",
+            "notNullValue" to "isNotNull",
+            "nullValue" to "isNull"
         )
 
     }

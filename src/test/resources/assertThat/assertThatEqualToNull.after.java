@@ -3,8 +3,8 @@ import org.assertj.core.api.Assertions;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-public void testEqualTo() {
-    final int myLuckyNumber = 9;
+public void testEqualToNull() {
+    final int myLuckyNumber = 1;
 
-    Assertions.assertThat(myLuckyNumber).isEqualTo(9);
+    <caret>Assertions.assertThat(myLuckyNumber).isNull();
 }

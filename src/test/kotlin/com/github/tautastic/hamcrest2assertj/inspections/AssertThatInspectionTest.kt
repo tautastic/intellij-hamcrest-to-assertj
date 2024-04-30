@@ -16,6 +16,7 @@ class AssertThatInspectionTest : LightJavaCodeInsightFixtureTestCase() {
         myFixture.addClass("""package org.hamcrest; public class MatcherAssert { public static <T> void assertThat(final String reason, final T actual, final Matcher<? super T> matcher) { return null; }}""")
         myFixture.addClass("""package org.assertj.core.api; public class Assertions { public static <T> void assertThat(final T actual) { }}""")
         myFixture.addClass("""package java.util; public class ArrayList<E> { public ArrayList() {} }""")
+        myFixture.addClass("""package java.lang; public final class Boolean { public Boolean() {} public static final Boolean TRUE = true; public static final Boolean FALSE = false; }""")
     }
 
     fun testAssertThatEqualTo() {
@@ -59,6 +60,10 @@ class AssertThatInspectionTest : LightJavaCodeInsightFixtureTestCase() {
     }
 
     fun testAssertThatNull() {
+        doIntentionTest()
+    }
+
+    fun testAssertThatEqualToPrimitiveBool() {
         doIntentionTest()
     }
 

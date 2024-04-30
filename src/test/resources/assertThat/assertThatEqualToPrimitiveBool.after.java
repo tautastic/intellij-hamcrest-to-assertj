@@ -1,10 +1,10 @@
-import java.lang.Boolean;
+import org.assertj.core.api.Assertions;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-public void testEqualToBool() {
+public void testEqualToPrimitiveBool() {
     final boolean falseStatement = 1 == 2;
 
-    <caret>assertThat("wrong result", falseStatement, equalTo(Boolean.FALSE));
+    <caret>Assertions.assertThat(falseStatement).isFalse();
 }

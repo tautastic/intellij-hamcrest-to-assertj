@@ -159,6 +159,8 @@ class AssertThatCallWrapper(expression: PsiMethodCallExpression) {
             "containsStringIgnoringCase" to "containsIgnoringCase",
             "empty" to "isEmpty",
             "contains" to "contains",
+            "hasItem" to "contains",
+            "hasItems" to "contains",
             "notNullValue" to "isNotNull",
             "nullValue" to "isNull"
         )

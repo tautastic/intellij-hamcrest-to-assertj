@@ -3,7 +3,7 @@ package com.github.tautastic.hamcrest2assertj.quickfixes
 import com.intellij.psi.*
 
 class AssertThatCallWrapper(expression: PsiMethodCallExpression) {
-    val reason: String?
+    private val reason: String?
     val actualExp: PsiExpression
     val matcherCallArgs: PsiExpressionList
     var newMatcherIdentifier: String

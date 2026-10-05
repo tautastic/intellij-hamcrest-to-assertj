@@ -1,0 +1,31 @@
+<html>
+<body>
+Reports Hamcrest <code>assertThat()</code> calls that can be rewritten as the equivalent AssertJ assertion.
+<p>Example:</p>
+<pre><code>
+assertThat("wrong size", list, hasSize(2));
+</code></pre>
+<p>After the quick fix is applied:</p>
+<pre><code>
+Assertions.assertThat(list).as("wrong size").hasSize(2);
+</code></pre>
+<!-- tooltip end -->
+<p>
+    The optional failure message is kept as an AssertJ description (<code>as(...)</code>) and the import for
+    <code>org.assertj.core.api.Assertions</code> is added when needed.
+</p>
+<p>Supported matchers:</p>
+<ul>
+    <li><code>equalTo</code>, <code>is</code> (including <code>true</code>, <code>false</code> and <code>null</code> values)</li>
+    <li><code>nullValue</code>, <code>notNullValue</code></li>
+    <li><code>hasSize</code>, <code>empty</code></li>
+    <li><code>contains</code> (converted to <code>containsExactly</code>), <code>hasItem</code>, <code>hasItems</code></li>
+    <li><code>containsString</code>, <code>containsStringIgnoringCase</code></li>
+    <li><code>allOf</code>, <code>anyOf</code> (converted to <code>satisfies</code> and <code>satisfiesAnyOf</code>)</li>
+</ul>
+<p>
+    Calls that use other matchers, or that pass a matcher where a plain value is expected
+    (for example <code>hasSize(greaterThan(2))</code>), are not reported because they cannot be converted faithfully.
+</p>
+</body>
+</html>
